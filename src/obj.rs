@@ -2,7 +2,7 @@ use geometry;
 
 #[derive(Clone, Copy)]
 pub enum Material {
-    Diffuse,
+    Diffuse(i32, i32, i32),
     Specular
 }
 
