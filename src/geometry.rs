@@ -1,58 +1,65 @@
 use std::fmt;
 use std::ops::{Add, Sub, Neg, Mul, Div};
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
     pub z: f64,
 }
 
-impl Add for Vec3 {
+impl <'a>Add<&'a Vec3> for Vec3 {
     type Output = Vec3;
 
-    fn add(self, other: Vec3) -> Vec3 {
-        Vec3 { x: self.x + other.x,
-               y: self.y + other.y,
-               z: self.z + other.z }
+    fn add(mut self, other: &'a Vec3) -> Vec3 {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+        self
     }
 }
 
 impl Neg for Vec3 {
     type Output = Vec3;
 
-    fn neg(self) -> Vec3 {
-        Vec3 { x: -self.x,
-               y: -self.y,
-               z: -self.z }
+    fn neg(mut self) -> Vec3 {
+        self.x = -self.x;
+        self.y = -self.y;
+        self.z = -self.z;
+        self
     }
 }
 
-impl Sub for Vec3 {
+impl <'a>Sub<&'a Vec3> for Vec3 {
     type Output = Vec3;
 
-    fn sub(self, other: Vec3) -> Vec3 {
-        self + (-other)
+    fn sub(mut self, other: &'a Vec3) -> Vec3 {
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+        self
     }
 }
 
 impl Mul<f64> for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, other: f64) -> Vec3 {
-        Vec3 { x: self.x * other,
-               y: self.y * other,
-               z: self.z * other }
+    fn mul(mut self, other: f64) -> Vec3 {
+        self.x *= other;
+        self.y *= other;
+        self.z *= other;
+        self
     }
 }
 
 impl Mul<Vec3> for f64 {
     type Output = Vec3;
 
-    fn mul(self, other: Vec3) -> Vec3 {
-        Vec3 { x: self * other.x,
-               y: self * other.y,
-               z: self * other.z }
+    fn mul(self, mut other: Vec3) -> Vec3 {
+        other.x *= self;
+        other.y *= self;
+        other.z *= self;
+        other
     }
 }
 
@@ -73,16 +80,17 @@ impl Div<Vec3> for f64 {
 }
 
 impl Vec3 {
-    pub fn size(self) -> f64 {
+    pub fn size(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
     pub fn normalize(self) -> Vec3 {
-        self / self.size()
+        let size = self.size();
+        self / size
     }
 }
 
-pub fn dot(lhs: Vec3, rhs: Vec3) -> f64 {
+pub fn dot(lhs: &Vec3, rhs: &Vec3) -> f64 {
     lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
 }
 
@@ -92,7 +100,7 @@ impl fmt::Display for Vec3 {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Ray {
     pub origin: Vec3,
     pub unit_dir: Vec3,
