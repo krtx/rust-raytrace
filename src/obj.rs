@@ -30,11 +30,11 @@ pub fn plane_new(x: f64, y: f64, z: f64, d: f64, m: Material) -> Plane {
             material: m }
 }
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub t: f64,
     pub normal: geometry::Vec3,
     pub point: geometry::Vec3,
-    pub material: Material
+    pub material: &'a Material
 }
 
 pub trait Hit {
@@ -61,7 +61,7 @@ impl Hit for Sphere {
                 Some(HitRecord { t: t,
                                  point: point + &(0.001 * normal.clone()),
                                  normal: normal,
-                                 material: self.material.clone() })
+                                 material: &self.material })
             }
         } else { None }
     }
@@ -77,7 +77,7 @@ impl Hit for Plane {
             Some(HitRecord{ t: t,
                             point: ray.origin.clone() + &(t * ray.unit_dir.clone()) + &(0.001 * self.normal.clone()),
                             normal: self.normal.clone(),
-                            material: self.material.clone() })
+                            material: &self.material })
         } else { None }
     }
 }

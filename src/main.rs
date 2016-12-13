@@ -14,11 +14,11 @@ struct Env {
 }
 
 impl Env {
-    fn hit(&self, ray: &geometry::Ray) -> Option<obj::HitRecord> {
+    fn hit<'a>(&'a self, ray: &geometry::Ray) -> Option<obj::HitRecord<'a>> {
         // Is it impossible to use generics in closure?
         let take_min =
-            |a: Option<obj::HitRecord>,
-             b: Option<obj::HitRecord>| match (a, b) {
+            |a: Option<obj::HitRecord<'a>>,
+             b: Option<obj::HitRecord<'a>>| match (a, b) {
             (Some(a), Some(b)) => if a.t < b.t { Some(a) } else { Some(b) },
             (Some(a), None)    => Some(a),
             (None   , Some(b)) => Some(b),
@@ -42,7 +42,7 @@ impl Env {
             None      => (0, 0, 0),
             Some(hit) => {
                 match hit.material {
-                    obj::Material::Diffuse(r, g, b)  => {
+                    &obj::Material::Diffuse(r, g, b)  => {
                         // let power_directional = geometry::dot(hit.normal, self.directional_light).max(0.0);
 
                         let shadow = self.positional_light.origin.clone() - &hit.point;
@@ -63,7 +63,7 @@ impl Env {
                          (power_positional * (g as f64)) as i32,
                          (power_positional * (b as f64)) as i32)
                     },
-                    obj::Material::Specular => {
+                    &obj::Material::Specular => {
                         let dir = ray.unit_dir.clone() + &(2.0 * geometry::dot(&-ray.unit_dir.clone(), &hit.normal) * hit.normal);
                         let ray = geometry::Ray { unit_dir: dir, origin: hit.point };
                         self.trace(&ray, depth - 1)
