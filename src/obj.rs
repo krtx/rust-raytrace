@@ -1,6 +1,6 @@
 use geometry;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum Material {
     Diffuse(i32, i32, i32),
     Specular
@@ -38,46 +38,46 @@ pub struct HitRecord {
 }
 
 pub trait Hit {
-    fn hit(&self, geometry::Ray) -> Option<HitRecord>;
+    fn hit(&self, &geometry::Ray) -> Option<HitRecord>;
 }
 
 impl Hit for Sphere {
-    fn hit(&self, ray: geometry::Ray) -> Option<HitRecord> {
-        let sray = self.origin - ray.origin;
-        
-        let det = geometry::dot(ray.unit_dir, sray).powi(2) - sray.size().powi(2) + self.radius.powi(2);
+    fn hit(&self, ray: &geometry::Ray) -> Option<HitRecord> {
+        let sray = self.origin.clone() - &ray.origin;
+
+        let det = geometry::dot(&ray.unit_dir, &sray).powi(2) - sray.size().powi(2) + self.radius.powi(2);
 
         if det >= 0.0 {
-            let t1 = geometry::dot(ray.unit_dir, sray) - det.sqrt();
-            let t2 = geometry::dot(ray.unit_dir, sray) + det.sqrt();
+            let t1 = geometry::dot(&ray.unit_dir, &sray) - det.sqrt();
+            let t2 = geometry::dot(&ray.unit_dir, &sray) + det.sqrt();
 
             if t2 < 0.0 {
                 None
             } else {
                 let t = if t1 >= 0.0 { t1 } else { t2 };
 
-                let point  = ray.origin + t * ray.unit_dir;
-                let normal = (point - self.origin).normalize();
+                let point  = ray.origin.clone() + &(t * ray.unit_dir.clone());
+                let normal = (point.clone() - &self.origin).normalize();
                 Some(HitRecord { t: t,
-                                 point: point + 0.001 * normal,
+                                 point: point + &(0.001 * normal.clone()),
                                  normal: normal,
-                                 material: self.material })
+                                 material: self.material.clone() })
             }
         } else { None }
     }
 }
 
 impl Hit for Plane {
-    fn hit(&self, ray: geometry::Ray) -> Option<HitRecord> {
+    fn hit(&self, ray: &geometry::Ray) -> Option<HitRecord> {
         let t =
-            (self.distance - geometry::dot(ray.origin, self.normal)) /
-            geometry::dot(ray.unit_dir, self.normal);
+            (self.distance - geometry::dot(&ray.origin, &self.normal)) /
+            geometry::dot(&ray.unit_dir, &self.normal);
 
         if t > 0.0 {
             Some(HitRecord{ t: t,
-                            point: ray.origin + t * ray.unit_dir + 0.001 * self.normal,
-                            normal: self.normal,
-                            material: self.material })
+                            point: ray.origin.clone() + &(t * ray.unit_dir.clone()) + &(0.001 * self.normal.clone()),
+                            normal: self.normal.clone(),
+                            material: self.material.clone() })
         } else { None }
     }
 }

@@ -14,7 +14,7 @@ struct Env {
 }
 
 impl Env {
-    fn hit(&self, ray: geometry::Ray) -> Option<obj::HitRecord> {
+    fn hit(&self, ray: &geometry::Ray) -> Option<obj::HitRecord> {
         // Is it impossible to use generics in closure?
         let take_min =
             |a: Option<obj::HitRecord>,
@@ -35,7 +35,7 @@ impl Env {
         hit
     }
 
-    fn trace(&self, ray: geometry::Ray, depth: i32) -> (i32, i32, i32) {
+    fn trace(&self, ray: &geometry::Ray, depth: i32) -> (i32, i32, i32) {
         if depth <= 0 { return (0, 0, 0); }
 
         match self.hit(ray) {
@@ -45,27 +45,28 @@ impl Env {
                     obj::Material::Diffuse(r, g, b)  => {
                         // let power_directional = geometry::dot(hit.normal, self.directional_light).max(0.0);
 
-                        let shadow = self.positional_light.origin - hit.point;
+                        let shadow = self.positional_light.origin.clone() - &hit.point;
+                        let shadow_size = shadow.size();
                         let shadow_ray = geometry::Ray {
                             origin: hit.point,
                             unit_dir: shadow.normalize()
                         };
-                        let power_coefficient = match self.hit(shadow_ray) {
-                            Some(h) => if h.t > shadow.size() { 1.0 } else { 0.2 },
+                        let power_coefficient = match self.hit(&shadow_ray) {
+                            Some(h) => if h.t > shadow_size { 1.0 } else { 0.2 },
                             None    => 1.0
                         };
                         let power_positional =
                             (power_coefficient *
-                             geometry::dot(hit.normal, shadow_ray.unit_dir).max(0.0) /
-                             (shadow.size() + 0.001).powf(1.5) * 150.0).min(1.0).max(0.0);
+                             geometry::dot(&hit.normal, &shadow_ray.unit_dir).max(0.0) /
+                             (shadow_size + 0.001).powf(1.5) * 150.0).min(1.0).max(0.0);
                         ((power_positional * (r as f64)) as i32,
                          (power_positional * (g as f64)) as i32,
                          (power_positional * (b as f64)) as i32)
                     },
                     obj::Material::Specular => {
-                        let dir = ray.unit_dir + 2.0 * geometry::dot(-ray.unit_dir, hit.normal) * hit.normal;
+                        let dir = ray.unit_dir.clone() + &(2.0 * geometry::dot(&-ray.unit_dir.clone(), &hit.normal) * hit.normal);
                         let ray = geometry::Ray { unit_dir: dir, origin: hit.point };
-                        self.trace(ray, depth - 1)
+                        self.trace(&ray, depth - 1)
                     }
                 }
             }
@@ -74,8 +75,8 @@ impl Env {
 
     fn shot(&self, target: geometry::Vec3) -> geometry::Ray {
         geometry::Ray {
-            origin: self.camera,
-            unit_dir: (target - self.camera).normalize()
+            origin: self.camera.clone(),
+            unit_dir: (target - &self.camera).normalize()
         }
     }
 }
@@ -119,7 +120,7 @@ fn main() {
         for x in left..right {
             let point = geometry::Vec3 { x: 0.08 * x as f64, y: 0.08 * y as f64, z: -10.0 };
             let ray = env.shot(point);
-            let power = env.trace(ray, 5);
+            let power = env.trace(&ray, 5);
 
             row.push(power);
         }
